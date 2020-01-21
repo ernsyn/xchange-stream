@@ -50,22 +50,18 @@ public enum StreamingExchangeFactory {
         try {
 
             // Attempt to locate the exchange provider on the classpath
-            Class exchangeProviderClass = Class.forName(exchangeClassName);
+            Class<?> exchangeProviderClass = Class.forName(exchangeClassName);
 
             // Test that the class implements Exchange
             if (Exchange.class.isAssignableFrom(exchangeProviderClass)) {
                 // Instantiate through the default constructor and use the default exchange specification
-                StreamingExchange exchange = (StreamingExchange) exchangeProviderClass.newInstance();
+                StreamingExchange exchange = (StreamingExchange) exchangeProviderClass.getConstructor().newInstance();
                 return exchange;
             } else {
                 throw new ExchangeException("Class '" + exchangeClassName + "' does not implement Exchange");
             }
-        } catch (ClassNotFoundException e) {
-            throw new ExchangeException("Problem creating Exchange (class not found)", e);
-        } catch (InstantiationException e) {
-            throw new ExchangeException("Problem creating Exchange (instantiation)", e);
-        } catch (IllegalAccessException e) {
-            throw new ExchangeException("Problem creating Exchange (illegal access)", e);
+        } catch (ReflectiveOperationException e) {
+            throw new ExchangeException("Problem creating Exchange ", e);
         }
 
         // Cannot be here due to exceptions
@@ -106,23 +102,19 @@ public enum StreamingExchangeFactory {
         try {
 
             // Attempt to locate the exchange provider on the classpath
-            Class exchangeProviderClass = Class.forName(exchangeClassName);
+            Class<?> exchangeProviderClass = Class.forName(exchangeClassName);
 
             // Test that the class implements Exchange
             if (Exchange.class.isAssignableFrom(exchangeProviderClass)) {
                 // Instantiate through the default constructor
-                StreamingExchange exchange = (StreamingExchange) exchangeProviderClass.newInstance();
+                StreamingExchange exchange = (StreamingExchange) exchangeProviderClass.getConstructor().newInstance();
                 exchange.applySpecification(exchangeSpecification);
                 return exchange;
             } else {
                 throw new ExchangeException("Class '" + exchangeClassName + "' does not implement Exchange");
             }
-        } catch (ClassNotFoundException e) {
-            throw new ExchangeException("Problem starting exchange provider (class not found)", e);
-        } catch (InstantiationException e) {
-            throw new ExchangeException("Problem starting exchange provider (instantiation)", e);
-        } catch (IllegalAccessException e) {
-            throw new ExchangeException("Problem starting exchange provider (illegal access)", e);
+        } catch (ReflectiveOperationException e) {
+            throw new ExchangeException("Problem starting exchange provider ", e);
         }
 
         // Cannot be here due to exceptions

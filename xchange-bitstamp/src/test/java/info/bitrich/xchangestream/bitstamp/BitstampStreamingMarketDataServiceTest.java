@@ -20,28 +20,27 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.function.Supplier;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-public class BitstampStreamingMarketDataServiceTest {
+public class BitstampStreamingMarketDataServiceTest extends BitstampStreamingMarketDataServiceBaseTest {
     @Mock
     private PusherStreamingService streamingService;
     private BitstampStreamingMarketDataService marketDataService;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         MockitoAnnotations.initMocks(this);
         marketDataService = new BitstampStreamingMarketDataService(streamingService);
     }
 
-    @Test
-    public void testGetOrderBook() throws Exception {
+    public void testOrderbookCommon(String channelName, Supplier<TestObserver<OrderBook>> updater) throws Exception {
         // Given order book in JSON
         String orderBook = new String(Files.readAllBytes(Paths.get(ClassLoader.getSystemResource("order-book.json").toURI())));
 
-        when(streamingService.subscribeChannel(eq("order_book_btceur"), eq("data"))).thenReturn(Observable.just(orderBook));
+        when(streamingService.subscribeChannel(eq(channelName), eq("data"))).thenReturn(Observable.just(orderBook));
 
         List<LimitOrder> bids = new ArrayList<>();
         bids.add(new LimitOrder(Order.OrderType.BID, new BigDecimal("0.922"), CurrencyPair.BTC_EUR, "", null, new BigDecimal("819.9")));
@@ -53,14 +52,20 @@ public class BitstampStreamingMarketDataServiceTest {
         asks.add(new LimitOrder(Order.OrderType.ASK, new BigDecimal("0.035"), CurrencyPair.BTC_EUR, "", null, new BigDecimal("821.6")));
 
         // Call get order book observable
-        TestObserver<OrderBook> test = marketDataService.getOrderBook(CurrencyPair.BTC_EUR).test();
+        TestObserver<OrderBook> test = updater.get();
 
         // We get order book object in correct order
-        test.assertValue(orderBook1 -> {
-            assertThat(orderBook1.getAsks()).as("Asks").isEqualTo(asks);
-            assertThat(orderBook1.getBids()).as("Bids").isEqualTo(bids);
-            return true;
-        });
+        validateOrderBook(bids, asks, test);
+    }
+
+    @Test
+    public void testGetDifferentialOrderBook() throws Exception {
+        testOrderbookCommon("diff_order_book_btceur", () -> marketDataService.getDifferentialOrderBook(CurrencyPair.BTC_EUR).test());
+    }
+
+    @Test
+    public void testGetOrderBook() throws Exception {
+        testOrderbookCommon("order_book_btceur", () -> marketDataService.getOrderBook(CurrencyPair.BTC_EUR).test());
     }
 
     @Test
@@ -76,19 +81,11 @@ public class BitstampStreamingMarketDataServiceTest {
         TestObserver<Trade> test = marketDataService.getTrades(CurrencyPair.BTC_USD).test();
 
         // We get order book object in correct order
-        test.assertValue(trade1 -> {
-            assertThat(trade1.getId()).as("Id").isEqualTo(expected.getId());
-            assertThat(trade1.getCurrencyPair()).as("Currency pair").isEqualTo(expected.getCurrencyPair());
-            assertThat(trade1.getPrice()).as("Price").isEqualTo(expected.getPrice());
-            // assertThat(trade1.getTimestamp()).as("Timestamp").isEqualTo(expected.getTimestamp());
-            assertThat(trade1.getOriginalAmount()).as("Amount").isEqualTo(expected.getOriginalAmount());
-            assertThat(trade1.getType()).as("Type").isEqualTo(expected.getType());
-            return true;
-        });
+        validateTrades(expected, test);
     }
 
     @Test(expected = NotAvailableFromExchangeException.class)
-    public void testGetTicker() throws Exception {
+    public void testGetTicker() {
         marketDataService.getTicker(CurrencyPair.BTC_EUR).test();
     }
 }

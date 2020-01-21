@@ -1,20 +1,19 @@
 package info.bitrich.xchangestream.bitstamp;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import info.bitrich.xchangestream.bitstamp.dto.BitstampOrderBook;
 import info.bitrich.xchangestream.bitstamp.dto.BitstampWebSocketTransaction;
+import info.bitrich.xchangestream.bitstamp.v2.BitstampStreamingService;
 import info.bitrich.xchangestream.core.StreamingMarketDataService;
+import info.bitrich.xchangestream.service.netty.StreamingObjectMapperHelper;
 import info.bitrich.xchangestream.service.pusher.PusherStreamingService;
 import io.reactivex.Observable;
 import org.knowm.xchange.bitstamp.BitstampAdapters;
+import org.knowm.xchange.bitstamp.dto.marketdata.BitstampOrderBook;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.marketdata.OrderBook;
 import org.knowm.xchange.dto.marketdata.Ticker;
 import org.knowm.xchange.dto.marketdata.Trade;
 import org.knowm.xchange.exceptions.NotAvailableFromExchangeException;
-
-import java.util.Date;
 
 public class BitstampStreamingMarketDataService implements StreamingMarketDataService {
     private final PusherStreamingService service;
@@ -23,18 +22,23 @@ public class BitstampStreamingMarketDataService implements StreamingMarketDataSe
         this.service = service;
     }
 
+    public Observable<OrderBook> getDifferentialOrderBook(CurrencyPair currencyPair, Object... args) {
+        return getOrderBook("diff_order_book", currencyPair, args);
+    }
+
     @Override
     public Observable<OrderBook> getOrderBook(CurrencyPair currencyPair, Object... args) {
-        String channelName = "order_book" + getChannelPostfix(currencyPair);
+        return getOrderBook("order_book", currencyPair, args);
+    }
 
-        return service.subscribeChannel(channelName, "data")
+    private Observable<OrderBook> getOrderBook(String channelPrefix, CurrencyPair currencyPair, Object... args) {
+        String channelName = channelPrefix + getChannelPostfix(currencyPair);
+
+        return service.subscribeChannel(channelName, BitstampStreamingService.EVENT_ORDERBOOK)
                 .map(s -> {
-                    ObjectMapper mapper = new ObjectMapper();
-                    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                    ObjectMapper mapper = StreamingObjectMapperHelper.getObjectMapper();
                     BitstampOrderBook orderBook = mapper.readValue(s, BitstampOrderBook.class);
-                    org.knowm.xchange.bitstamp.dto.marketdata.BitstampOrderBook bitstampOrderBook = new org.knowm.xchange.bitstamp.dto.marketdata.BitstampOrderBook(new Date().getTime() / 1000L, orderBook.getBids(), orderBook.getAsks());
-
-                    return BitstampAdapters.adaptOrderBook(bitstampOrderBook, currencyPair);
+                    return BitstampAdapters.adaptOrderBook(orderBook, currencyPair);
                 });
     }
 
@@ -48,13 +52,10 @@ public class BitstampStreamingMarketDataService implements StreamingMarketDataSe
     public Observable<Trade> getTrades(CurrencyPair currencyPair, Object... args) {
         String channelName = "live_trades" + getChannelPostfix(currencyPair);
 
-        return service.subscribeChannel(channelName, "trade")
+        return service.subscribeChannel(channelName, BitstampStreamingService.EVENT_TRADE)
                 .map(s -> {
-                    ObjectMapper mapper = new ObjectMapper();
-                    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                    ObjectMapper mapper = StreamingObjectMapperHelper.getObjectMapper();
                     BitstampWebSocketTransaction transactions = mapper.readValue(s, BitstampWebSocketTransaction.class);
-                    transactions = new BitstampWebSocketTransaction(new Date().getTime() / 1000L, transactions.getTid(),
-                            transactions.getPrice(), transactions.getAmount(), transactions.getType());
                     return BitstampAdapters.adaptTrade(transactions, currencyPair, 1000);
                 });
     }

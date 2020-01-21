@@ -1,15 +1,13 @@
 package info.bitrich.xchangestream.binance.dto;
 
 import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.knowm.xchange.binance.dto.marketdata.BinanceOrderbook;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.Iterator;
@@ -28,10 +26,10 @@ public class DepthBinanceWebSocketTransactionTest {
     }
 
     @Test
-    public void testMapping() throws JsonParseException, JsonMappingException, IOException {
+    public void testMapping() throws Exception {
         InputStream stream = this.getClass().getResourceAsStream("testDepthEvent.json");
         DepthBinanceWebSocketTransaction transaction = mapper.readValue(stream, DepthBinanceWebSocketTransaction.class);
-        assertEquals(BaseBinanceWebSocketTransaction.BinanceWebSocketTypes.depthUpdate, transaction.getEventType());
+        assertEquals(BaseBinanceWebSocketTransaction.BinanceWebSocketTypes.DEPTH_UPDATE, transaction.getEventType());
 
         BinanceOrderbook orderBook = transaction.getOrderBook();
 
@@ -44,7 +42,7 @@ public class DepthBinanceWebSocketTransactionTest {
         assertOrderBookEntry(askIterator, 0.10490700, 0.00000000);
     }
 
-    public void assertOrderBookEntry(Iterator<Entry<BigDecimal, BigDecimal>> entryIterator, double price, double volume) {
+    private void assertOrderBookEntry(Iterator<Entry<BigDecimal, BigDecimal>> entryIterator, double price, double volume) {
         Entry<BigDecimal, BigDecimal> firstAskEntry = entryIterator.next();
         assertEquals(price, firstAskEntry.getKey().doubleValue(), 0.0);
         assertEquals(volume, firstAskEntry.getValue().doubleValue(), 0.0);

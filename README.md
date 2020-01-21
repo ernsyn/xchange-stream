@@ -1,7 +1,9 @@
 # XChange-stream [![Build Status](https://travis-ci.org/bitrich-info/xchange-stream.svg?branch=master)](https://travis-ci.org/bitrich-info/xchange-stream)
+> **MAINTAINER WANTED:** If anyone would like contribute to this project and become a maintainer, let me know via message. This project would deserve more time than I have.
+
 XChange-stream is a Java library providing a simple and consistent streaming API for interacting with Bitcoin and other crypto currency exchanges via WebSocket protocol.
 
-It is build on top of of [XChange library](https://github.com/timmolter/XChange) providing new interfaces for streaming API. User can subscribe for live update via reactive streams of [RxJava library](https://github.com/ReactiveX/RxJava).
+It is build on top of the [XChange library](https://github.com/timmolter/XChange) providing new interfaces for the exchanges' streaming APIs. Users can subscribe for live updates via reactive streams of [RxJava library](https://github.com/ReactiveX/RxJava).
 
 ## Why use it?
 
@@ -15,7 +17,7 @@ It is build on top of of [XChange library](https://github.com/timmolter/XChange)
 
 ### Include in your project
 
-Xchange-stream is on Maven Central. You will need `xchange-stream-core` dependency and `xchange-XYZ` where XYZ is supported exchange (eg. `xchange-bitstamp`). Add following into your `pom.xml`.
+Xchange-stream is on Maven Central. You will need `xchange-stream-core` dependency and `xchange-XYZ` where XYZ is supported exchange (eg. `xchange-bitstamp`). Add the following into your `pom.xml`.
 
 
 #### Maven
@@ -48,12 +50,12 @@ For snapshots version (built from develop branch), add the following repository 
 
 #### Versioning 
 
-Xchange-stream follows major and minor version from XChange library. So version 4.2.x is based on latest 4.2. release of XChange.
+XChange-stream follows major and minor version from XChange library. So version 4.2.x is based on latest 4.2. release of XChange.
 
 
 ### Example
 
-Use the library same as the XChange. But instead of `ExchangeFactory` use `StreamingExchangeFactory` that creates `StreamingExchange` instead of `Exchange`. Then you can call `getStreaminMarkeDataService` as well as `getPolling*Service`.
+Use the same library as XChange but instead of `ExchangeFactory` use `StreamingExchangeFactory` that creates `StreamingExchange` instead of `Exchange`. Then you can call `getStreamingMarketDataService` to subscribe to trade data.
 
 ```java
 StreamingExchange exchange = StreamingExchangeFactory.INSTANCE.createExchange(BitstampStreamingExchange.class.getName());
@@ -87,31 +89,39 @@ More information about reactive streams can be found at [RxJava wiki](https://gi
 
 ## What is supported
 
-Listening for live updates of
+Listening for live updates of:
 
-Exchange | order books | trades | tickers
--------- | ----------- | ------ | -------
-**Binance** | :heavy_check_mark: | :x: | :x:
-**Bitfinex** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:
-**Bitflyer** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:
-**BitMEX** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:
-**Bitstamp** | :heavy_check_mark: | :heavy_check_mark: | :x:
-**Coinmate** | :heavy_check_mark: | :heavy_check_mark: | :x:
-**OKCoin** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:
-**OKEx** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:
-**Poloniex** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:
-**GDAX** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:
-**Gemini** | :heavy_check_mark: | :heavy_check_mark: | :x:
-**Wex** | :heavy_check_mark: | :heavy_check_mark: | :x:
+| Exchange         | order books        | trades (public)    | tickers            | balances           | trades (user)      | open orders        | notes |
+| ---------------- | ------------------ | ------------------ | ------------------ | ------------------ | ------------------ | ------------------ | ----- |
+| **Bankera**      | :heavy_check_mark: | :heavy_check_mark: | :construction:     | :question:         | :question:         | :question:         | Ticker support could be implemented using the trades and order book streams, even though the exchange doesn't explicitly return a ticker stream. |
+| **Binance**      | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
+| **Bitfinex**     | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
+| **Bitflyer**     | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :question:         | :question:         | :question:         | |
+| **BitMEX**       | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :construction:     | :construction:     | :construction:     | We are short of maintainers able to review pull requests and provide support for Bitmex, so there is a backlog of pull requests and support is likely broken. Can you help? See [#180](https://github.com/bitrich-info/xchange-stream/pull/180) for reference if attempting to add private channel support. |
+| **Bitstamp**     | :heavy_check_mark: | :heavy_check_mark: | :x:                | :question:         | :question:         | :question:         | |
+| **CEX.IO**       | :heavy_check_mark: | :x:                | :x:                | :question:         | :question:         | :question:         | New support, not widely tested  |
+| **Coinbase Pro** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
+| **Coinmate**     | :heavy_check_mark: | :heavy_check_mark: | :x:                | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
+| **Kraken**       | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :x:                | :heavy_check_mark: | :heavy_check_mark: | |
+| **OKCoin**       | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :question:         | :question:         | :question:         | |
+| **OKEx**         | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :question:         | :question:         | :question:         | See [#180](https://github.com/bitrich-info/xchange-stream/pull/180) for reference if attempting to add private channel support. |
+| **Poloniex**     | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :question:         | :question:         | :question:         | |
+| **Gemini**       | :heavy_check_mark: | :heavy_check_mark: | :x:                | :construction:     | :construction:     | :construction:     | |
 
 - :heavy_check_mark: - implemented
 - :construction: - missing but can be implemented
 - :x: - not supported by the exchange
+- :question: - exchange support level not known (please fill in)
 
-GDAX authenticated live updates is not yet supported, hopefully it will be added in the near future. 
-
-If you missing specific exchange implementation, feel free to propose pull request or open issue with some sweet BTC bounty. 
+If you missing a specific exchange implementation, feel free to propose a pull request or open an issue with some sweet BTC bounty. 
  
+## Open Source Projects Using XChange-Stream
+
+This is an, not so complete, list of projects that use XChange-Stream, feel free to add your project below.
+- [XChange-Trade-Bot](https://github.com/yurivin/xchange-trade-bot) by yurivin
+- [Crypto Websockets](https://github.com/firepol/crypto-websockets) by firepol
+- [CryptoRealTime](https://github.com/GoogleCloudPlatform/professional-services/tree/master/examples/cryptorealtime) by galic1987
+- [Orko - Multi-exchange trading](https://github.com/gruelbox/orko) by gruelbox/badgerwithagun
 
 ## License
 Copyright 2017 Zdenek Dolezal, Michal Oprendek
